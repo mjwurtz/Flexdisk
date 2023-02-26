@@ -1,0 +1,50 @@
+.TH FLAN 1 "" "" "Flex disk image analyser"
+.SH NAME
+flan \- Verify a Flex disk image file
+.SH SYNOPSIS
+.B flan
+[\fI\-h\fP]
+.br
+.B flan
+[\fI\-q\fP|\fI-v\fP] [\fI\-r\fP] \fIfilename\fR
+.SH DESCRIPTION
+.PP
+Flan verify the coherence of a disk image and the use of all the sectors.
+.PP
+It returns 0 if everything is OK, or if the option \fI\-r\fP is used and free list problems
+are resolved, 1 if the only problems encountered are in the free sector list
+(sector duplicated or absent, size of list not matching the chained list), or 2 if more
+serious problems are encountered (sectors allocation in files or directory, broken links, ...)
+.SH OPTIONS
+.TP
+.B \-h
+Help: print a short usage summary and exit.
+.TP
+.B \-q
+Quiet: Verify image silently without printing any error message, just return value.
+This option can only be used if the option \fI-v\fP is not used.
+.TP
+.B \-r
+Reconstruct: Repar or reorder the free sectors chained list if necessary.
+No action is taken when errors on files or directory are detected.
+On the other hand, if the problems detected on the freelist are repaired, the command returns 0.
+.PP
+Since after using this option, one can usually no more undelete files, deleted entries are replaced by the last files, whose entries are zero filled, increasing directory free entries...
+.TP
+.B \-v
+Verbose: List the files with their length, their first and last track/sector allocation,
+their creation date and if they are random access file (flag 'RANDOM').
+Deleted files are also listed, with their name's first character replaced by '?' and
+the flag 'DELETED' added.
+If the file seems recoverable (the list of chained sectors is apparently OK in the
+free sectors chained list), this is printed too.
+.SH COPYRIGHT
+.PP
+\fBFlan\fR is Copyright \(co 2022 Michel J. Wurtz.
+.br
+\fBFlan\fR is open source software, released under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2,
+or any later version.
+.SH SEE ALSO
+.PP
+fflex(1), fldump(1), flwrite(1), fldel(1), flunpack(1), flpack(1).

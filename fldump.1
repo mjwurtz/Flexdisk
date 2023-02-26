@@ -1,0 +1,61 @@
+.TH FLDUMP 1 "" "" "Flex disk image dump"
+.SH NAME
+fldump \- Extract all files from a Flex disk image file
+\fB
+.SH SYNOPSIS
+.B fldump
+[\fI\-h\fP]
+.br
+.B fldump
+[\fI\-a\fP] [\fI\-q\fP|\fI\-v\fP] \fIfilename\fP
+.SH DESCRIPTION
+.PP
+Fldump creates a directory whose name is the Flex Volume Label followed by an underscore and
+the Flex Volume number.  If the label is empty, the basename of the image file is used instead.
+All the files of the image are the copied in this directory.
+The modification date of the extracted files are set to the flex date, except when inconsistant.
+.PP
+If the directory exists, or the disk image is not readable, nothing is done and the program
+returns 3.
+.PP
+.B Fldump
+returns 0 if everything is OK, 1 if the only problems encountered are in the free sector list
+(sector duplicated or absent, size of list not matching the chained list), or 2 if more
+serious problems that prevent files to be extracted.
+.PP
+Files are extracted and stripped of the 4 first bytes (link to next sector and sector number)
+with no other modification except for random access files, where the 12 first bytes of the
+resulting file are replaced by the text '#RAND##FLEX#', used as magic number.
+.PP
+Text files can then be converted to unix format by
+.BR flunpack (1)
+and command can be converted to binary with
+.BR cmd2bin (1).
+.SH OPTIONS
+.TP
+.B \-a
+All: Extract also deleted files if this is possible (the list of chained sectors is coherent).  The first
+character of the file name is replaced by the sequence '_\fIn\fP_', where \fIn\fP is the
+file's position in the directory, starting by 1.
+.TP
+.B \-h
+Help: print a short usage summary and exit.
+.TP
+.B \-q
+Quiet: don't display anything, except error messages.
+.TP
+.B \-v
+Verbose: List the files with their length, their first and last track/sector allocation, their
+creation date and if they are random access file (flags). List also deleted files with the first
+character of their name replaced by '?'.
+More details are also printed about the disk image in case of problems detected.
+.SH COPYRIGHT
+.PP
+\fBFldump\fR is Copyright \(co 2022 Michel J. Wurtz.
+.br
+\fBFldump\fR is open source software, released under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2,
+or any later version.
+.SH SEE ALSO
+.PP
+fflex(1), flan(1), flwrite(1), fldel(1), flunpack(1), flpack(1).

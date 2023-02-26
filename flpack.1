@@ -1,0 +1,39 @@
+.TH FLPACK 1 "" "" "Flex text file compressor"
+.SH NAME
+flpack \- convert a Unix text file to a Flex compressed text file
+\fB
+.SH SYNOPSIS
+.B flpack
+[\fI\-t\fP tabstop]
+[input_file [output_file]]
+.SH DESCRIPTION
+.PP
+Flpack convert a text file in Unix format to a Flex compressed text file by
+.br
+- replacing tabs by spaces according to tabstop value,
+and then compressing spaces with tab + number for Flex.
+.br
+- replacing <LF> by <CR>
+.br
+- padding the file with nulls ($00) to create a file whose length is an integer number of sectors once written on a Flex disc.
+.PP
+If no output file is given, standard output is used.
+.PP
+If no input file is given, standard input is used.
+.PP
+.B Flpack
+returns 0 if everything is OK, 1 if input or output file fails to open.
+.SH OPTIONS
+.TP
+.BI \-t " tabstop"
+Tabstop value to use.  By default, the standard interval of 8 is used.
+.SH COPYRIGHT
+.PP
+\fBFlpack\fR is Copyright \(co 2022 Michel J. Wurtz.
+.br
+\fBFlpack\fR is open source software, released under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2,
+or any later version.
+.SH SEE ALSO
+.PP
+fflex(1), flan(1), flwrite(1), fldel(1), fldump(1), flpack(1).

@@ -1,0 +1,33 @@
+.TH FLUNPACK 1 "" "" "Flex text file decompressor"
+.SH NAME
+flunpack \- Uncompress a flex text file and format it unix style
+\fB
+.SH SYNOPSIS
+.B flunpack
+[ <input file> [<output file] ]
+.SH DESCRIPTION
+.PP
+Flunpack uncompress a Flex text file and format it Unix style by
+.br
+- converting tab+number to the right number of spaces
+.br
+- replacing <CR> by <LF>
+.br
+- suppressing null ($00) bytes
+.PP
+If no output file is given, standard output is used.
+.PP
+If no input file is given, standard input is used.
+.PP
+.B Flunpack
+returns 0 if everything is OK, 1 if input or output file fails to open.
+.SH COPYRIGHT
+.PP
+\fBFlunpack\fR is Copyright \(co 2022 Michel J. Wurtz.
+.br
+\fBFlunpack\fR is open source software, released under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2,
+or any later version.
+.SH SEE ALSO
+.PP
+fflex(1), flan(1), flwrite(1), fldel(1), fldump(1), flpack(1).
