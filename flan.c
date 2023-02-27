@@ -33,6 +33,30 @@ void usage( char *cmd) {
 	fprintf( stderr, "   -v => print a detailled listing of files\n");
 }
 
+// Display directory of a 6800 FDOS disk
+
+void fdosdir() {
+  uint8_t *entry;
+
+  printf( "SWTPC 6800 FDOS disk (35 tracks of 10 sectors) detected.\n\n");
+  printf( "Name     Password  start  size type load at  end  start @\n");
+  printf( "-------- -------- ------ ----- ---- ------- ----- -------\n");
+  entry = disk.dsk + 0x1400;
+  while (*entry != 0xFF) {
+	for (int i = 0; i < 16; i++)
+	  putchar( entry[i]);
+	printf( "  [%02X/%02X]", entry[16], entry[17]);
+	printf( " %3d", (int)entry[18]*256 + (int)entry[19]);
+    printf( "   %02X", entry[20]);
+	printf( "   $%02X%02X", entry[21], entry[22]);
+	printf( "  $%02X%02X", entry[23], entry[24]);
+	printf( "  $%02X%02X\n", entry[25], entry[26  ]);
+	entry += 32;
+  }
+  printf( "\nFree space start [%02X/%02X], length %d\n",
+	entry[16], entry[17], (int)entry[18]*256 + (int)entry[19]);
+}
+
 // Analyse the content of the disk loaded
 
 int browse_dsk() {
@@ -62,16 +86,26 @@ int browse_dsk() {
 // Not a flex disk ?
   if (getname( disk.dsk + 0x210, disk.label, 0) < 0 || disk.dsk[0x226] == 0 || disk.dsk[0x227] == 0) {
 	retval = 3;
-	// Test OS/9
+// Test OS/9
 		fprintf( stderr, "Not a Flex disk image: ");
 	long size = (((long)disk.dsk[0]*256)+(long)disk.dsk[1])*256 + (long)disk.dsk[2];
 	if (size == nb_sectors) {
-		fprintf( stderr, "OS-9 disk detected.\n");
+		fprintf( stderr, "Probably an OS-9 disk...\n");
 	} else {
 		size = (((long)disk.dsk[0x212]*256)+(long)disk.dsk[0x213]+(long)disk.dsk[0x23F])*256 + (long)disk.dsk[0X214] + (long)disk.dsk[0X240] + 1;
+// Test Uniflex
 		if (size * 2 == nb_sectors)
-			fprintf( stderr, "UniFLEX disk image detected.\n");
-		else
+			fprintf( stderr, "Probably an UniFLEX disk...\n");
+// Test FDOS. Simple enough, so display directory if -v
+		else if (disk.size == 89600 && disk.dsk[0x1400] == '$' && disk.dsk[0x1401] == 'D'
+				&& disk.dsk[0x1402] == 'O' && disk.dsk[0x1403] == 'S') {
+			if (verbose)
+			  fdosdir();
+// If not verbose, just give some info on stderr
+			else
+			  fprintf( stderr, "SWTPC 6800 FDOS disk (35 tracks of 10 sectors) detected.\n");
+// It's something other
+		} else
 	  		fprintf( stderr, "Unknown disk image type\n");
 	}
 	exit( retval);
@@ -156,7 +190,7 @@ int browse_dsk() {
   tabsec = malloc( sizeof(int) * nb_sectors);
   nxtsec = malloc( sizeof(int) * nb_sectors);
   for (k = 0; k < nb_sectors; k++) {
-	tabsec[k] = -9999; // initialy not used
+	tabsec[k] = -99999; // initialy not used
 	nxtsec[k] = 0;
   }
 
@@ -173,10 +207,10 @@ int browse_dsk() {
 	  break;
 	}
 	current_sector = ts2pos( cftrk, cfsec);
-	if (tabsec[ibloc] == -9999)
+	if (tabsec[ibloc] == -99999)
 	  tabsec[ibloc] = -1;
 	else
-	  tabsec[ibloc]--; // nb of times used in freelist
+	  tabsec[ibloc]--; // nb of times used in freelist, must be 1
 	cftrk = current_sector[0];
 	cfsec = current_sector[1];
 	nxtsec[ibloc] = ts2blk( cftrk, cfsec);
@@ -185,7 +219,7 @@ int browse_dsk() {
 		break;
   }
   for (j = 0; j < k+1; j++) {
-	if (tabsec[j] < -1 && tabsec[j] != -9999) {
+	if (tabsec[j] < -1 && tabsec[j] != -99999) {
 	  if (!quiet)
 		printf( "%sERROR sector [0x%02x/0x%02x] %d times in freelist%s\n",
 		  s_err, blk2trk( j), blk2sec( j), -tabsec[j], s_norm);
@@ -463,7 +497,7 @@ int browse_dsk() {
 	if (!quiet) {
 	  printf( "%sWarning : %d sector(s) missing in freelist%s\n", s_warn, notused, s_norm);
 	  for (k=5; k < nb_sectors; k++)
-		if (tabsec[k] == -9999)
+		if (tabsec[k] == -99999)
 		  if (verbose)
 			printf( "[%02x/%02x]   ", blk2trk( k), blk2sec( k));
 	  putchar( '\n');
