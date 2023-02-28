@@ -184,6 +184,8 @@ int browse_dsk() {
 	printf( "Number of data sectors: %d\n", disk.nbtrk * disk.nbsec);
 	printf( "Free sectors: %d [%02x/%02x - %02x/%02x]\n", disk.freesec,
 	  disk.dsk[0x21d], disk.dsk[0x21e], disk.dsk[0x21f], disk.dsk[0x220]);
+	if (disk.freesec == 0)
+	  printf( "%sWarning: empty free list%s\n", s_warn, s_norm);
   }
 
 // table of all blocs of the disk:
@@ -227,7 +229,7 @@ int browse_dsk() {
 	}
   }
 // to be confirmed later
-  if (k != disk.freesec-1) {
+  if (k != disk.freesec-1 && disk.freesec != 0) {
 	retval = 1;
 	if (!quiet)
 	  printf( "%sBad free sectors list length: chain of %d sectors instead of %d%s\n",
@@ -527,7 +529,7 @@ int browse_dsk() {
   if (!repar)
 	return retval;
 
-// Reorganise free sector list
+// Reorganise or create new free sector list
   free_nb = 0;
   reorg = 0;
   free_start = ts2blk( disk.dsk[0x21d], disk.dsk[0x21e]);
@@ -601,7 +603,7 @@ int browse_dsk() {
 	else
 	  printf( "Freelist clean: no modification needed\n");
   }
-  if (reorg)
+  if (reorg || ndel)
 	if (msync( disk.dsk, disk.size, MS_SYNC) < 0) {
 	  perror( "Freelist update failed");
 	  return 1;
@@ -680,24 +682,23 @@ int main( int argc, char **argv)
   else
 	disk.shortname++;
 
+  disk.size = dsk_stat.st_size;
   if ((dsk_stat.st_mode & S_IWUSR) && repar) {
 	disk.readonly = 0;
 	disk.fd = open( disk.filename, O_RDWR);
 	flags = PROT_READ | PROT_WRITE;
+	disk.dsk = mmap( &disk.dsk, dsk_stat.st_size, flags, MAP_SHARED, disk.fd, 0);
   } else {
 	disk.readonly = 1;
 	disk.fd = open( disk.filename, O_RDONLY);
 	flags = PROT_READ;
+	disk.dsk = mmap( &disk.dsk, dsk_stat.st_size, flags, MAP_PRIVATE, disk.fd, 0);
 	if (repar) {
 	  repar = 0;
-	  if (!quiet) {
-		fprintf( stderr, "Warning: file %s is READ_ONLY, option '-r' ignored\n", filename);
-	  }
+	  fprintf( stderr, "Warning: file %s is READ_ONLY, option '-r' ignored\n", filename);
 	}
   }
 
-  disk.size = dsk_stat.st_size;
-  disk.dsk = mmap( &disk.dsk, dsk_stat.st_size, flags, MAP_PRIVATE, disk.fd, 0);
 
   if (disk.dsk == NULL) {
 	perror( filename);
