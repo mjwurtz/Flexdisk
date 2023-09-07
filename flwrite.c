@@ -73,13 +73,17 @@ int browse_dsk() {
 	// Test OS/9
 	size = (((long)disk.dsk[0]*256)+(long)disk.dsk[1])*256 + (long)disk.dsk[2];
 	if (size == nb_sectors) {
-	  fprintf( stderr, "OS-9 disk detected.\n");
+		fprintf( stderr, "Probably an OS-9 disk...\n");
 	} else {
-	  size = (((long)disk.dsk[0x212] * 256) + (long)disk.dsk[0x213] +
-		  (long)disk.dsk[0x23F]) * 256 + (long)disk.dsk[0X214] + (long)disk.dsk[0X240] + 1;
-	// Test UniFlex
+		size = (((long)disk.dsk[0x212]*256)+(long)disk.dsk[0x213]+(long)disk.dsk[0x23F])*256 + (long)disk.dsk[0X214] + (long)disk.dsk[0X240] + 1;
+// Test Uniflex
 	  if (size * 2 == nb_sectors)
-		fprintf( stderr, "UniFLEX disk image detected.\n");
+			fprintf( stderr, "Probably an UniFLEX disk...\n");
+// Test FDOS
+		else if (disk.size == 89600 && disk.dsk[0x1400] == '$' && disk.dsk[0x1401] == 'D'
+				&& disk.dsk[0x1402] == 'O' && disk.dsk[0x1403] == 'S')
+			  fprintf( stderr, "SWTPC 6800 FDOS disk (35 tracks of 10 sectors) detected.\n");
+// It's something other
 	  else
 	  	fprintf( stderr, "Unknown disk image type\n");
 	}
@@ -146,7 +150,7 @@ int browse_dsk() {
   tabsec = malloc( sizeof(int) * nb_sectors);
   nxtsec = malloc( sizeof(int) * nb_sectors);
   for (k = 0; k < nb_sectors; k++) {
-	tabsec[k] = -9999; // initialy not used
+	tabsec[k] = -99999; // initialy not used
 	nxtsec[k] = 0;
   }
 
@@ -160,7 +164,7 @@ int browse_dsk() {
 	  exit( 2);
 	}
 	current_sector = ts2pos( cftrk, cfsec);
-	if (tabsec[ibloc] == -9999)
+	if (tabsec[ibloc] == -99999)
 	  tabsec[ibloc] = -1;
 	else
 	  tabsec[ibloc]--; // nb of times used in freelist
@@ -172,7 +176,7 @@ int browse_dsk() {
 		break;
   }
   for (j = 0; j < k+1; j++) {
-	if (tabsec[j] < -1 && tabsec[j] != -9999) {
+	if (tabsec[j] < -1 && tabsec[j] != -99999) {
 	  fprintf( stderr, "ERROR: Bad freelist, sector duplicated\n");
 	  exit( 2);
 	}
@@ -331,7 +335,7 @@ int browse_dsk() {
   }
 
   for (k=5; k < nb_sectors; k++) {
-	if (tabsec[k] == -9999) {
+	if (tabsec[k] == -99999) {
 	  notused++;
 	}
   }

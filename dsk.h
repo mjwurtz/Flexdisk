@@ -74,7 +74,7 @@ static char *month[] = {"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","O
 static int *nxtsec;	// table for sector linking
 static int *tabsec;	// table for sector usage
 
-// Convert track/sector to bloc number in the file
+// Convert track/sector to bloc number on the disc image 
 int ts2blk( uint8_t ntrk, uint8_t nsec) {
 	if (ntrk > disk.nbtrk || nsec > disk.nbsec || (nsec == 0 && ntrk != 0)) {
 		return( -1);
@@ -90,7 +90,7 @@ int ts2blk( uint8_t ntrk, uint8_t nsec) {
 	}
 }
 
-// Convert bloc number to track number
+// Convert bloc number on the disc image to track number
 uint8_t blk2trk( int index) {
 	if( index < disk.track0l)
 		return 0;
@@ -98,7 +98,7 @@ uint8_t blk2trk( int index) {
 		return (index - disk.track0l) / disk.nbsec + 1;
 }
 
-// Convert bloc number to sector number 
+// Convert bloc number on the disc image to sector number 
 uint8_t blk2sec( int index) {
 	if( index < disk.track0l)
 		return index+1;
@@ -106,7 +106,7 @@ uint8_t blk2sec( int index) {
 		return (index - disk.track0l) % disk.nbsec + 1;
 }
 
-// Convert track/sector to byte offset in disk image
+// Convert track/sector pointer on disk image
 
 uint8_t *ts2pos( uint8_t ntrk, uint8_t nsec) {
   int pos;
@@ -117,6 +117,8 @@ uint8_t *ts2pos( uint8_t ntrk, uint8_t nsec) {
 
 // read 8+3 name and insert a dot if necessary
 // return the number of char of the name
+// dot = 0 for volume name (11 chars, no ext.)
+// return the length of name, parameter name updated
 
 int getname( uint8_t *pos, char *name, int dot) {
   int k = 0;

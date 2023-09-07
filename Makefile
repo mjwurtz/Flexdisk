@@ -18,11 +18,14 @@ flwrite: flwrite.c dsk.h
 
 all: flan fldump fflex flpack flunpack flwrite
 
-install: flan fldump fflex flpack flunpack flwrite
+install: all
 	mkdir -p $(BIN)
 	cp flan fldump fflex flpack flunpack flwrite $(BIN)
 	ln -f $(BIN)/flwrite $(BIN)/fldel
 
 man: flan.1 fldump.1 fflex.1 flpack.1 flunpack.1 flwrite
 	cp flan.1 fldump.1 fflex.1 flpack.1 flunpack.1 flwrite.1 $(MAN)
+
+clean:
+	rm -f flan fldump fflex flpack flunpack flwrite
 

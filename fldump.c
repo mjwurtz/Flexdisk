@@ -21,12 +21,14 @@ static int retval = 0;
 static int verbose = 0;
 static int quiet = 0;
 static int all = 0;
+static int where = 0;
 
 void usage( char *cmd) {
 	fprintf( stderr, "Usage: %s [-h] => this help\n", cmd);
 	fprintf( stderr, "       %s [-q|-v] [-a] <file>\n", cmd);
     fprintf( stderr, "Options:\n");
 	fprintf( stderr, "   -a => extract deleted files if possible\n");
+	fprintf( stderr, "   -b => directory for extracted files based on file name\n");
 	fprintf( stderr, "   -q => quiet, don't print anything except error messages\n");
 	fprintf( stderr, "   -v => print a detailled listing of files\n");
 }
@@ -119,11 +121,17 @@ int browse_dsk() {
 		fprintf( stderr, "Not a Flex disk image: ");
 	long size = (((long)disk.dsk[0]*256)+(long)disk.dsk[1])*256 + (long)disk.dsk[2];
 	if (size == nb_sectors) {
-		fprintf( stderr, "OS-9 disk detected.\n");
+		fprintf( stderr, "Probably an OS-9 disk...\n");
 	} else {
 		size = (((long)disk.dsk[0x212]*256)+(long)disk.dsk[0x213]+(long)disk.dsk[0x23F])*256 + (long)disk.dsk[0X214] + (long)disk.dsk[0X240] + 1;
+// Test Uniflex
 		if (size * 2 == nb_sectors)
-			fprintf( stderr, "UniFLEX disk image detected.\n");
+			fprintf( stderr, "Probably an UniFLEX disk...\n");
+// Test FDOS
+		else if (disk.size == 89600 && disk.dsk[0x1400] == '$' && disk.dsk[0x1401] == 'D'
+				&& disk.dsk[0x1402] == 'O' && disk.dsk[0x1403] == 'S')
+			  fprintf( stderr, "SWTPC 6800 FDOS disk (35 tracks of 10 sectors) detected.\n");
+// It's something other
 		else
 	  		fprintf( stderr, "Unknown disk image type\n");
 	}
@@ -203,7 +211,7 @@ int browse_dsk() {
   tabsec = malloc( sizeof(int) * nb_sectors);
   nxtsec = malloc( sizeof(int) * nb_sectors);
   for (k = 0; k < nb_sectors; k++) {
-	tabsec[k] = -9999; // initialy not used
+	tabsec[k] = -99999; // initialy not used
 	nxtsec[k] = 0;
   }
 
@@ -219,7 +227,7 @@ int browse_dsk() {
 	  break;
 	}
 	current_sector = ts2pos( cftrk, cfsec);
-	if (tabsec[ibloc] == -9999)
+	if (tabsec[ibloc] == -99999)
 	  tabsec[ibloc] = -1;
 	else
 	  tabsec[ibloc]--; // nb of times used in freelist
@@ -231,7 +239,7 @@ int browse_dsk() {
 		break;
   }
   for (j = 0; j < k+1; j++) {
-	if (tabsec[j] < -1 && tabsec[j] != -9999) {
+	if (tabsec[j] < -1 && tabsec[j] != -99999) {
 	  if (!quiet)
 		printf( "ERROR sector [0x%02x/0x%02x] %d times in freelist\n",
 		  blk2trk( j), blk2sec( j), -tabsec[j]);
@@ -267,15 +275,17 @@ int browse_dsk() {
 	for (k=0; k < 10 && nfile < DIRSIZE; k++) {
   	  entry = base + 16 + (24 * k);
   	  if (*entry != 0) {
+		file[nfile].flags = 0;
 	    if (getname( entry, name, 1) < 0) {
 		  if (!quiet)
 			printf( "ERROR: Directory entry %d with bad filename\n", nfile);
 		  file[nfile].flags |= 0x40;
 		}
 		j = ts2blk( entry[0xd], entry[0xe]);
-		if (j < 1 || j == 2) { 
-		  if (!quiet)
-			printf( "ERROR: Directory entry %d not valid, directory corrupted\n", nfile);
+		if ((j < 1 || j == 2) && *name != 0xFF && entry[0x12] != 0) { 
+
+		  printf( "ERROR: Directory entry %d (%s) : sector [%02X,%02X] not valid\n",
+			nfile, name, entry[0xd], entry[0xe]);
 		  file[nfile].length = 0;
 		  file[nfile].flags |= 0x80;
 		  retval = 2;
@@ -291,13 +301,12 @@ int browse_dsk() {
 			dsktime.tm_mon = 0;
 		else
 			dsktime.tm_mon = (int)entry[0x15] - 1;
-		if (entry[0x17] > 50)
+		if (entry[0x17] > 75)
 			dsktime.tm_year = (int)entry[0x17];
 		else
 			dsktime.tm_year = (int)entry[0x17] + 100;
 
 		file[nfile].mtime = mktime( &dsktime);
-		file[nfile].flags = 0;
 
 	    if (entry[0x13]) {
 		  file[nfile].flags |= 2;
@@ -479,7 +488,7 @@ int browse_dsk() {
   }
   int notused = 0;
   for (k=5; k < nb_sectors; k++) {
-	if (tabsec[k] == -9999) {
+	if (tabsec[k] == -99999) {
 	  notused++;
 	}
   }
@@ -487,13 +496,12 @@ int browse_dsk() {
 	printf( "Warning : %d sector(s) missing in freelist\n", notused);
 
 // create a directory named after the volume name
-  if (disk.label[0])
-	strcpy( dirname, disk.label);
+  if (disk.label[0] && where == 0)
+	sprintf( dirname, "%s_%u", disk.label, disk.volnum);
   else
-	sprintf( dirname, "noname_DSK_%u", disk.volnum);
+	sprintf( dirname, "%s.dir", disk.shortname);
 
   if (mkdir( dirname, 0755) != 0) {
-//	fprintf( stderr, "Impossible de créer le répertoire '%s'", dirname);
 	perror( dirname);
 	exit( 3);
   }
@@ -513,7 +521,7 @@ int main( int argc, char **argv)
   struct stat dsk_stat;
   int flags;
 
-  while ((opt = getopt( argc, argv, "ahqv")) != -1) {
+  while ((opt = getopt( argc, argv, "abhqv")) != -1) {
 	switch (opt) {
 	case 'h':
 	  usage( *argv);
@@ -521,6 +529,9 @@ int main( int argc, char **argv)
 	  break;
 	case 'a':
 	  all = 1;
+	  break;
+	case 'b':
+	  where = 1;
 	  break;
 	case 'v':
 	  verbose = 1;

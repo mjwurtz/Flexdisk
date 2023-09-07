@@ -11,7 +11,8 @@ fldump \- Extract all files from a Flex disk image file
 .SH DESCRIPTION
 .PP
 Fldump creates a directory whose name is the Flex Volume Label followed by an underscore and
-the Flex Volume number.  If the label is empty, the basename of the image file is used instead.
+the Flex Volume number.  If the label is empty or option \fI\-b\fP is used,
+the basename of the image file with \fI.dir\fr appended is used instead.
 All the files of the image are the copied in this directory.
 The modification date of the extracted files are set to the flex date, except when inconsistant.
 .PP
@@ -37,6 +38,10 @@ and command can be converted to binary with
 All: Extract also deleted files if this is possible (the list of chained sectors is coherent).  The first
 character of the file name is replaced by the sequence '_\fIn\fP_', where \fIn\fP is the
 file's position in the directory, starting by 1.
+.TP
+.B \-b
+Ignore disk label and extract files in a directory whose name is the basename of
+the image file with \fI.dir\fr appended.
 .TP
 .B \-h
 Help: print a short usage summary and exit.
