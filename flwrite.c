@@ -108,7 +108,7 @@ int browse_dsk() {
 	disk.track0l = disk.nbsec;
   } else {
 	disk.track0l = nb_sectors - disk.nbtrk * disk.nbsec;
-	if ((disk.nbsec == 36 && disk.track0l == 20) ||
+	if ((disk.nbsec >= 36 && disk.track0l == 20) ||
 	  (disk.nbsec == 18 && disk.track0l == 10) ||
 	  (disk.track0l == disk.nbsec/2)) {
 	  if (verbose)

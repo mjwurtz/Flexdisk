@@ -172,7 +172,7 @@ int browse_dsk() {
 	disk.track0l = disk.nbsec;
   } else {
 	disk.track0l = nb_sectors - disk.nbtrk * disk.nbsec;
-	if ((disk.nbsec == 36 && disk.track0l == 20) ||
+	if ((disk.nbsec >= 36 && disk.track0l == 20) ||
 	  (disk.nbsec == 18 && disk.track0l == 10) ||
 	  (disk.track0l == disk.nbsec/2)) {
 	  if (!quiet)
@@ -195,7 +195,7 @@ int browse_dsk() {
 	} else {
 	  disk.nbtrk -= (((disk.nbtrk * disk.nbsec - nb_sectors) / disk.nbsec) + 1);
 	  if (!quiet) {
-		printf( "ERROR: Disk image too small... truncated ?\n");
+		printf( "ERROR: Disk image too small... unusual geometry or truncated ?\n");
 		printf( "Reducing number of tracks to %d, ", disk.nbtrk);
 	  }
 	  if (disk.nbsec < 25)
@@ -409,6 +409,8 @@ int browse_dsk() {
 		printf( "ERROR: File %s (%d), sector %d(0x%02x)/%d(0x%02x) also in file %s (%d)\n",
 		  file[k].name, k, cftrk, cftrk, cfsec, cfsec, file[ibloc].name, ibloc);
 		file[k].flags |= 0x80;
+		if (k == ibloc)
+		  break;
 		file[ibloc].flags |= 0x80;
 	  }
 	  cftrk = current_sector[0];

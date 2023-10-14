@@ -153,7 +153,7 @@ int browse_dsk() {
     disk.track0l = disk.nbsec;
   } else {
     disk.track0l = nb_sectors - disk.nbtrk * disk.nbsec;
-    if ((disk.nbsec == 36 && disk.track0l == 20) ||
+    if ((disk.nbsec >= 36 && disk.track0l == 20) ||
       (disk.nbsec == 18 && disk.track0l == 10) ||
       (disk.track0l == disk.nbsec/2)) {
       if (!quiet)
@@ -178,7 +178,7 @@ int browse_dsk() {
       disk.nbtrk -= (((disk.nbtrk * disk.nbsec - nb_sectors) / disk.nbsec) + 1);
 // This is generaly no good
       if (!quiet) {
-        printf( "%sERROR: Disk image too small... truncated ?\n", s_err);
+        printf( "%sERROR: Disk image too small... unusual geometry or truncated ?\n", s_err);
         printf( "%sReducing number of tracks to %d, %s", s_warn, disk.nbtrk, s_norm);
       }
       if (disk.nbsec < 25)
@@ -265,14 +265,16 @@ int browse_dsk() {
   if (tabsec[ibloc] < -1)
     tabsec[ibloc] = 0; // value for directory bloc
   else {
-    retval = 2;
+    retval = 1;
+	if (repar)
+	  tabsec[ibloc] = 0;
     if (!quiet)
       printf( "%sERROR: directory sector 0(0x00)/5(0x05) also in freelist%s\n", s_err, s_norm);
   }
 
   base = ts2pos( 0, 5) ; // dir on sector 5 (offset = 0x400)
 
-  while (nslot < DIRSIZE) {    // TODO should be dynamic
+  while (nslot < DIRSIZE) {	// TODO should be dynamic
     if (base[0])            // directory bloc ouside track 0
       dirsec++;
     for (k=0; k < 10 && nslot < DIRSIZE; k++) {
@@ -351,12 +353,14 @@ int browse_dsk() {
     if (tabsec[ibloc] < -1)
       tabsec[ibloc] = 0;
     else {
-      retval = 2;
       if (tabsec[ibloc] == -1) {
+        retval = 1;
+		tabsec[ibloc] = 0;
         if (!quiet)
           printf( "%sERROR: Directory sector %d(0x%02x)/%d(0x%02x) also in freelist%s\n",
             s_err, base[0], base[0], base[1], base[1], s_norm);
       } else {
+        retval = 2;
         if (!quiet)
           printf( "%sERROR: Directory sector %d(0x%02x)/%d(0x%02x) twice used (loop)%s\n",
             s_err, base[0], base[0], base[1], base[1], s_norm);
@@ -427,6 +431,8 @@ int browse_dsk() {
         printf( "%sERROR: File %s (%d), sector %d(0x%02x)/%d(0x%02x) also in file %s (%d)%s\n",
           s_err, file[k].name, k, cftrk, cftrk, cfsec, cfsec, file[ibloc].name, ibloc, s_norm);
         file[k].flags |= 0x80;
+		if (k == ibloc)
+		  break;
         file[ibloc].flags |= 0x80;
       }
       cftrk = current_sector[0];
