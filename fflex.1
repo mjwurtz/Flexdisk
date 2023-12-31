@@ -1,4 +1,4 @@
-.TH FFLEX 1 "" "v1.0" "Flex disk image formater"
+.TH FFLEX 1 "" "" "Flex disk image formater"
 .SH NAME
 fflex \- Create a Flex disk image
 \fB
@@ -10,7 +10,8 @@ fflex \- Create a Flex disk image
 This is a command-line program to format a Flex disk image.
 .PP
 If no file extension is given, \fI.dsk\fP is used.
-By default, the disk label is a made of the 11 first characters of the filemane (without extension).
+By default, the disk label is a copy of the 11 first characters of the
+filemane, without extension.
 .PP
 Fflex can craft any custom geometry in addition to standard 5" disk geometry.
 .SH OPTIONS
@@ -19,7 +20,9 @@ Fflex can craft any custom geometry in addition to standard 5" disk geometry.
 Output help on usage and options
 .TP
 .BI \-l " name\fR, \fP" \-\-label\fR=\fP name
-Flex Volume label, limited to the 11 first characters \fIname\fP. When not precised, the disk label is a copy of the 11 first characters of the \fIfilename\fP, without extension.
+Flex Volume label, limited to the 11 first characters \fIname\fP.
+When not precised, the disk label is a copy of the 11 first characters of
+the \fIfilename\fP. without extension
 .TP
 .BI \-v " number\fR, \fP" \-\-volume-number\fR=\fP number
 Flex Volume Number, between 0 and 65535.
@@ -34,14 +37,16 @@ where nbsectors is the total number of sectors by track (default 10, max 255).
 Force double density (single density by default)
 .TP
 .BI \-f " nbsectors\fR, \fP"  \-\-first-track\fR=\fP nbsectors
-This parameter is only used for double density images : For a single density disk,
-all tracks have the same number of sectors. Since Flex generaly wants a single density
-first track, the number of sectors in first track is equal by default to (sectors by track / 2 + 2)
+This parameter is only used for double density images:
+For a single density disk, all tracks have the same number of sectors.
+Since Flex generaly wants a single density first track, the number of sectors
+in first track is equal by default to (sectors_by_track / 2 + 2)
 .TP
 .BI \-g " geometry\fR, \fP" \-\-geometry\fR=\fP geometry
-Where \fIgeometry\fP represent a standard Flex disk geometry for a 5" floppy :
+Where \fIgeometry\fP represent a standard Flex disk geometry for a 5" floppy:
 \fBSSSD40\fP (Single Side Single Density 40 tracks),
-\fBSSDD40\fP, \fBDSSD40\fP, \fBDSDD40\fP, \fBSSSD80\fP, \fBSSDD80\fP, \fBDSSD80\fP or \fBDSDD80\fP.
+\fBSSDD40\fP, \fBDSSD40\fP, \fBDSDD40\fP, \fBSSSD80\fP, \fBSSDD80\fP,
+\fBDSSD80\fP or \fBDSDD80\fP.
 .PP
 If this option is used, options
 .BR \-t ", " \-s ", and " \-d
@@ -50,27 +55,30 @@ are ignored.
 .TP
 fflex foobar
 
-Creates a file \fBfoobar.dsk\fP, image of a Single sided Single density FLex disk with 40 tracks
-of 10 sectors. Volume label is \fIFOOBAR\fR, and volume number is 0,
+Creates a file \fBfoobar.dsk\fP, image of a Single sided Single density FLex
+disk with 40 tracks of 10 sectors. Volume label is \fIFOOBAR\fR,
+and volume number is 0,
 .TP
 fflex -l zaphod -v 42 -t 128 -s 32 -d -f 20 foo
 
-Creates a file \fBfoo.dsk\fP, image of a Double Sided Double Density Flex disk with 127 tracks
-of 32 sectors, plus a first track of 20 sectors, Volume label is \fIZAPHOD\fP and
+Creates a file \fBfoo.dsk\fP, image of a Double Sided Double Density
+Flex disk with 127 tracks of 32 sectors, plus a first track of 20 sectors,
+Volume label is \fIZAPHOD\fP and
 Volume Number is 42.
 .TP
 fflex -g SSDD80 works.ima
 
-Creates a file \fBworks.ima\fP, image of a Single Side Double Density 80 tracks Flex floppy,
-with 18 sectors by tracks, except on first track where there is only 10 sectors.
+Creates a file \fBworks.ima\fP, image of a Single Side Double Density
+80 tracks Flex floppy, with 18 sectors by tracks, except on first track
+where there is only 10 sectors.
 Disk volume label is \fIWORKS.IMA\fR and volume number is 0.
 .SH COPYRIGHT
 .PP
 \fBFflex\fR is Copyright \(co 2022 Michel J. Wurtz.
 .br
-\fBFflex\fR is open source software, released under the terms of the GNU General
-Public License as published by the Free Software Foundation; either version 2,
-or any later version.
+\fBFflex\fR is open source software, released under the terms of the
+GNU General Public License as published by the Free Software Foundation;
+either version 2, or any later version.
 .SH SEE ALSO
 .PP
 flan(1), fldump(1), flwrite(1), fldel(1), flunpack(1), flpack(1).
