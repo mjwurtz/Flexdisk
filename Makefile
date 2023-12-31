@@ -3,6 +3,8 @@
 MAN = /usr/local/man/man1
 BIN = ~/bin
 
+all: flan fldump fflex flpack flunpack flwrite
+
 flan: flan.c dsk.h
 	cc -o flan flan.c
 fldump: fldump.c dsk.h
@@ -15,8 +17,6 @@ flunpack: flunpack.c dsk.h
 	cc -o flunpack flunpack.c
 flwrite: flwrite.c dsk.h
 	cc -o flwrite flwrite.c
-
-all: flan fldump fflex flpack flunpack flwrite
 
 install: all
 	mkdir -p $(BIN)
