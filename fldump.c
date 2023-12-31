@@ -145,9 +145,8 @@ int browse_dsk() {
   disk.freesec = disk.dsk[0x221]*256 + disk.dsk[0x222];
 
 // Too much free sectors for the disk ?
-  if (disk.freesec > disk.nbtrk * disk.nbsec) {
-	fprintf( stderr, "ERROR: SIR Corrupted or not a Flex image\n");
-	exit( 3);
+  if (disk.freesec > disk.nbtrk * disk.nbsec && !quiet) {
+    printf( "Warning: Number of free sectors bigger than disk size\n");
   }
 
 // Print info about the disk
