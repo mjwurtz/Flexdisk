@@ -1,0 +1,32 @@
+.TH MOT2CMD 1 "September 15, 2023" "v1.0" "Convert Motorola S19 encoded data to FLEX .CMD file"
+.SH SYNOPSIS
+.B mot2cmd
+[\fB\-h\fP]
+.br
+.B mot2cmd
+[\fB\-v\fP] <\fIinput_file\fP> [\fIoutput_file\fP]
+.SH DESCRIPTION
+.B Mot2cmd
+reads Motorola S19 encoded data from
+.I input_file
+and writes the decoded binary with
+integrated loading informations usable on a Flex filesystem.
+The default name of the output file is the input file name, striped from its extension,
+limited to 8 characters and suffixed by ".CMD" to make it compatble with a Flex filesystem.
+.SH OPTIONS
+.TP
+.B \-h
+Print short help messages to standard error
+.TP
+.B \-v
+Print extra status messages to standard error
+.SH COPYRIGHT
+.PP
+\fBMot2cmd\fR is Copyright \(co 2023 Michel J. Wurtz.
+.br
+\fBMot2cmd\fR is open source software, released under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2,
+or any later version.
+.SH SEE ALSO
+.PP
+fflex(1), flan(1), fldump(1), flwrite(1), fldel(1), flunpack(1), flpack(1).
