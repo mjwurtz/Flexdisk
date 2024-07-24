@@ -27,7 +27,7 @@
 #include <time.h>
 #include <ctype.h>
 
-#define VERSION "1.0 (2022-03-15)"
+#define VERSION "1.1 (2024-06-30)"
 
 void usage( char *cmd) {
 	printf( "Usage : %s [options...] <filename>\n", cmd);
@@ -35,7 +35,7 @@ void usage( char *cmd) {
 	printf( "  -h --help : this help\n");
 	printf( "  -l --label=<volume label> (default = filename)\n");
 	printf( "  -v --volume-number=<0-65535> (default = 0)\n");
-	printf( "  -t --track-count=<number of tracks> (default 40, max 255)\n");
+	printf( "  -t --track-count=<number of tracks> (default 40, max 256)\n");
 	printf( "  -s --sector-count=<number of sectors> (default 10, max 255)\n");
 	printf( "  -d --double-density  (default single density)\n");
 	printf( "  -f --first-track=<number of sectors in first track if double-density>\n");
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 
 	for (i = 0; volname[i]; i++) {
 		if (!isalnum(volname[i]) && volname[i] != '-' && volname[i] != '_') {
-			printf( "Illegal character '%c' in Volume name, will be replaced by '_'\n", volname[i]);
+			printf( "Illegal character '%c' in Volume name, replaced by '_'\n", volname[i]);
 			volname[i] = '_';
 		}
 	}
@@ -172,8 +172,8 @@ int main(int argc, char *argv[])
 		volname[i++] = 0;
 
 // Is Volume number OK ?	
-	if (dsknum > 0xFFFF) {
-		printf( "Disk Volume number (%d) must be less than 65536\n", dsknum);
+	if (disknum  < 0 || dsknum > 0xFFFF) {
+		printf( "Disk Volume number (%d) must be positive and less than 65536\n", dsknum);
 		usage( *argv);
 	}
 
@@ -207,8 +207,12 @@ int main(int argc, char *argv[])
 			usage( *argv);
 		}
 	} else {
-		if (nbsec > 255 || nbtrk > 255) {
-			printf( "Number of tracks or sectors must be under 256\n");
+		if (nbsec > 255 || nbsec < 6 + 2 * dd) {
+			printf( "Number of sectors : 6 to 255 (8 to 255 for double-density disks)\n");
+			usage( *argv);
+		}
+		if (nbtrk > 256 || nbtrk < 2) {
+			printf( "Number of tracks : 2 to 256\n");
 			usage( *argv);
 		}
 		if (ft == 0) {
@@ -216,6 +220,10 @@ int main(int argc, char *argv[])
 				ft = nbsec/2 + 2;
 			else
 				ft = nbsec;
+		} else {
+			if (ft < 6 || ft > nbsec) {
+				printf( "Track 0 size must > 6 and less than number of sectors (%n)\n", nbsec);
+				usage( *argv);
 		}
 	}
 
@@ -272,11 +280,12 @@ int main(int argc, char *argv[])
 		bloc[i] = 0;
 	write( fd, bloc, 256);
 
-	//	write directory (empty) on first track
+	// write directory (empty) on first track
 	for (i = 5; i < ft; i++) {
 		bloc[1] = i + 1;
 		write( fd, bloc, 256);
 	}
+	// last bloc 
 	bloc[1] = 0;
 	write( fd, bloc, 256);
 
