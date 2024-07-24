@@ -27,9 +27,7 @@
 #include <time.h>
 #include <ctype.h>
 
-//#include "dsk.h"
-
-#define VERSION "1.1 (2024-06-30)"
+#define VERSION "1.1 (2024-07-24)"
 
 void usage( char *cmd) {
 	printf( "Usage : %s [options...] <filename>\n", cmd);
