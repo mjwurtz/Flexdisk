@@ -1,5 +1,7 @@
-/* flan.c -- Flex floppy analyser 
+/* flan.c -- Flex FLoppy ANalyser 
    Copyright (C) 2022 Michel Wurtz - mjwurtz@gmail.com
+
+   Utility to list, analyse, and repar FLEX/FDOS floppy images
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -41,6 +43,8 @@ void fdosdir() {
   uint8_t *entry;
 
   printf( "SWTPC 6800 FDOS disk (35 tracks of 10 sectors) detected.\n\n");
+  if (!verbose)
+    return;
   printf( "Name     Password  start  size type load at  end  start @\n");
   printf( "-------- -------- ------ ----- ---- ------- ----- -------\n");
   entry = disk.dsk + 0x1400;
@@ -89,31 +93,25 @@ int browse_dsk() {
   if (getname( disk.dsk + 0x210, disk.label, 0) < 0 ||
       disk.dsk[0x226] == 0 || disk.dsk[0x227] == 0) {
     retval = 3;
-    fprintf( stderr, "Not a Flex disk image: ");
+    printf( "Not a Flex disk image: ");
 
 // Test OS/9
     long size = (((long)disk.dsk[0]*256)+(long)disk.dsk[1])*256 + (long)disk.dsk[2];
     if (size == nb_sectors) {
-      fprintf( stderr, "Probably an OS-9 disk...\n");
+      printf( "Probably an OS-9 disk...\n");
     } else {
 // Test Uniflex
       size = (((long)disk.dsk[0x212]*256) + (long)disk.dsk[0x213] +
       (long)disk.dsk[0x23F])*256 + (long)disk.dsk[0X214] + (long)disk.dsk[0X240] + 1;
       if (size * 2 == nb_sectors)
-        fprintf( stderr, "Probably an UniFLEX disk...\n");
+        printf( "Probably an UniFLEX disk...\n");
 
 // Test FDOS. Simple enough, so display directory if -v
       else if (disk.size == 89600 && disk.dsk[0x1400] == '$' && disk.dsk[0x1401] == 'D'
-                && disk.dsk[0x1402] == 'O' && disk.dsk[0x1403] == 'S') {
-        if (verbose)
-          fdosdir();
-// If not verbose, just give some info on stderr
-        else
-          fprintf( stderr, "SWTPC 6800 FDOS disk (35 tracks of 10 sectors) detected.\n");
-
-// It's something other...
-      } else
-        fprintf( stderr, "Unknown disk image type\n");
+                && disk.dsk[0x1402] == 'O' && disk.dsk[0x1403] == 'S')
+        fdosdir();
+      else // It's something other...
+        printf( "Unknown disk image type\n");
     }
     exit( retval);
   }
@@ -131,11 +129,11 @@ int browse_dsk() {
 
 // Print info about the disk
   if (!quiet) {
-    printf( "Flex Volume name: %s, %d tracks, %d sectors/track\n",
+    printf( "Flex Volume name: '%s', %d tracks, %d sectors/track\n",
       disk.label, disk.nbtrk+1, disk.nbsec);
     printf( "Flex Volume number: %d\n", disk.volnum);
-    printf( "Creation Date: %d-%02d-%02d\n",
-      disk.dsk[0x225]>50?disk.dsk[0x225]+1900:disk.dsk[0x225]+2000,
+    printf( "Creation Date (YYYY-MM-DD): %d-%02d-%02d\n",
+      disk.dsk[0x225]>75?disk.dsk[0x225]+1900:disk.dsk[0x225]+2000,
       (disk.dsk[0x223]&0x0f)+1, disk.dsk[0x224]);
     printf( "Highest Sector address on disk: %02x/%02x\n", disk.dsk[0x226], disk.dsk[0x227]);
   }
@@ -143,11 +141,10 @@ int browse_dsk() {
 // Try to guess disk geometry
   if ((disk.nbtrk+1) * disk.nbsec == nb_sectors) {
     if (!quiet) {
-      printf ( "Looks like a Single Density disk");
       if (disk.nbsec > 18)
-        printf( " (but could be a DD disk with a DD track 0\n");
+        printf( "Looks like a Gotek image or a DD disk with a DD track 0\n");
       else
-        putchar( '\n');
+        printf( "Looks like a Single Density disk\n");
     }
     disk.track0l = disk.nbsec;
   } else {
@@ -175,7 +172,7 @@ int browse_dsk() {
           disk.track0l);
     } else {
       disk.nbtrk -= (((disk.nbtrk * disk.nbsec - nb_sectors) / disk.nbsec) + 1);
-// This is generaly no good
+// This is generaly no good, trying to guess end of track 0
       if (!quiet) {
         printf( "%sERROR: Disk image too small... unusual geometry or truncated ?\n", s_err);
         printf( "%sReducing number of tracks to %d, %s", s_warn, disk.nbtrk, s_norm);
@@ -193,21 +190,27 @@ int browse_dsk() {
 // Print general stats
   if (!quiet) {
     printf( "Number of data sectors: %d\n", disk.nbtrk * disk.nbsec);
-    printf( "Free sectors: %d [%02x/%02x - %02x/%02x]\n", disk.freesec,
-      disk.dsk[0x21d], disk.dsk[0x21e], disk.dsk[0x21f], disk.dsk[0x220]);
     if (disk.freesec == 0)
-      printf( "%sWarning: empty free list%s\n", s_warn, s_norm);
+      printf( "%sWarning: empty free list (no more space on disk)%s\n", s_warn, s_norm);
+	else
+      printf( "Free sectors: %d [%02x/%02x - %02x/%02x]\n", disk.freesec,
+        disk.dsk[0x21d], disk.dsk[0x21e], disk.dsk[0x21f], disk.dsk[0x220]);
   }
 
 // table of all blocs of the disk:
 // tabsec may contain :
-// - the entry in directory from the file using it
-// - 0 for a directory bloc
-// - -1 for a free sector
-// - -99999 for a bloc not reclaimed
+// * the directory entry number of the file using it
+// * 0 for a directory bloc
+// * -1 for a sector in freelist
+// * -99999 for a bloc not reclaimed by a file
+// * -99998 for a bloc not reclaimed on track 0 (directory)
   tabsec = malloc( sizeof(int) * nb_sectors);
   nxtsec = malloc( sizeof(int) * nb_sectors);
-  for (k = 0; k < nb_sectors; k++) {
+  for (k = 0; k < disk.track0l; k++) {
+    tabsec[k] = -99998; // initialy not used
+    nxtsec[k] = 0;
+  }
+  for (k = disk.track0l; k < nb_sectors; k++) {
     tabsec[k] = -99999; // initialy not used
     nxtsec[k] = 0;
   }
@@ -215,8 +218,7 @@ int browse_dsk() {
 // creating a table of freelist blocs
   cftrk = disk.dsk[0x21d];
   cfsec = disk.dsk[0x21e];
-
-  for (k = 0; k < disk.freesec; k++) {
+  for (k = 0; k < nb_sectors; k++) {
     if ((ibloc = ts2blk( cftrk, cfsec)) < 0) {
       if (!quiet)
         printf( "%sERROR: sector link out of bounds [0x%02x/0x%02x] in freelist%s\n",
@@ -229,26 +231,45 @@ int browse_dsk() {
       tabsec[ibloc] = -1;
     else
       tabsec[ibloc]--; // free bloc twice in list: must not happens
-    cftrk = current_sector[0];
-    cfsec = current_sector[1];
-    nxtsec[ibloc] = ts2blk( cftrk, cfsec);
 
-    if (cftrk == 0 && cfsec == 0)
+    if (current_sector[0] == 0 && current_sector[1] == 0) {
+		if (cftrk != disk.dsk[0x21f] || cfsec != disk.dsk[0x220]) {
+			if (!quiet)
+				printf( "%sERROR: bad free list end [0x%02x/0x%02x] vs [0x%02x/0x%02x]%s\n",
+          			s_err, disk.dsk[0x21f], disk.dsk[0x220], cftrk, cfsec, s_norm);
+			retval = 1;
+			if (repar) {
+				disk.dsk[0x21f] = cftrk;
+				disk.dsk[0x220] = cfsec;
+			}
+		}
         break;
+	} else {
+    	cftrk = current_sector[0];
+    	cfsec = current_sector[1];
+	}
+    nxtsec[ibloc] = ts2blk( cftrk, cfsec);
   }
   for (j = 0; j < k+1; j++) {
-    if (tabsec[j] < -1 && tabsec[j] != -99999) {
+    if (tabsec[j] < -1 && tabsec[j] > -99998) {
       if (!quiet)
-        printf( "%sERROR sector [0x%02x/0x%02x] %d times in freelist%s\n",
+        printf( "%sERROR: sector [0x%02x/0x%02x] %d times in freelist%s\n",
           s_err, blk2trk( j), blk2sec( j), -tabsec[j], s_norm);
       retval = 1;
     }
   }
+  for (j = 0; j < disk.track0l; j++)
+	if (tabsec[j] == -1) {
+		printf( "%sWarning: freelist contains track 0 blocs%s\n",
+		  s_warn, s_norm);
+		retval = 1;
+		break;
+	}
 // to be confirmed later
   if (k != disk.freesec-1 && disk.freesec != 0) {
     retval = 1;
     if (!quiet)
-      printf( "%sBad free sectors list length: chain of %d sectors instead of %d%s\n",
+      printf( "%sWarning: free sectors chain contains %d sectors instead of %d%s\n",
         s_warn, k+1, disk.freesec, s_norm);
   }
 
@@ -445,16 +466,18 @@ int browse_dsk() {
   }
 
 // General statistics...
-  if (!quiet) {
+  if (!quiet)
     printf( "Total number of sectors used by files: %d\n", usedsec);
-    printf( "Number of sectors used by directory outside track 0: %d\n", dirsec);
+  if (dirsec) {
+    printf( "%sWarning: %d sectors used by directory outside track 0%s\n",
+	  s_warn, dirsec, s_norm);
   }
 
 // Print list of files...
   if (nfile > 0) {
     if (verbose) {
       printf( "\nFile list (%d used + %d deleted / %d entries):\n", nfile - ndel, ndel, nslot);
-      printf( " id       Filename    start    end    size      date    flags\n");
+      printf( " id       Filename  start    end    size      date    flags\n");
       for( k=1; k <= nfile; k++) {
         printf( "%3d %14s [%02x/%02x - %02x/%02x] %5d",
           k, file[k].name, file[k].start_trk, file[k].start_sec,
@@ -508,11 +531,48 @@ int browse_dsk() {
           s_warn, k+1, file[tabsec[k]].name, tabsec[k], s_norm);
     }
   }
-  int notused = 0;
-  for (k=5; k < nb_sectors; k++) {
+  int notused = 0; // Number of blocs not reclaimed (trk 1-n)
+  int notdir = 0;  // Number of dir blocs not used (trk 0)
+  for (k=5; k < disk.track0l; k++) {
+    if (tabsec[k] == -99998) {
+      notdir++;
+    }
+  }
+  for (k=disk.track0l; k < nb_sectors; k++) {
     if (tabsec[k] == -99999) {
       notused++;
     }
+  }
+  if (notdir) {
+    if (retval < 1)
+      retval = 1;
+    if (!quiet) {
+      printf( "%sWarning : %d directory sector(s) not used in track 0%s\n", s_warn, notdir, s_norm);
+      for (k=5; k < disk.track0l; k++)
+        if (verbose && (tabsec[k] == -99998))
+            printf( "[%02x/%02x]   ", blk2trk( k), blk2sec( k));
+      putchar( '\n');
+    }
+	if (repar) {
+		base = disk.dsk + 5 * SECSIZE;
+		while (base[1] > 0) {
+			ibloc = ts2blk( base[0], base[1]);
+			base = disk.dsk + ibloc * SECSIZE;
+		}   
+		for (k = 5; k < disk.track0l-1; k++) {
+			if (tabsec[k] == -99998) {
+				base = disk.dsk + ibloc * SECSIZE;
+				base[0] = blk2trk( k);
+				base[1] = blk2sec( k);
+				ibloc = k;
+			}
+		}
+		if (tabsec[disk.track0l] == -99998) {
+			base = disk.dsk + disk.track0l * SECSIZE;
+			base[0] = blk2trk( k);
+			base[1] = blk2sec( k);
+		}
+	}
   }
   if (notused) {
     if (retval < 1)
@@ -554,7 +614,7 @@ int browse_dsk() {
   free_nb = 0;
   reorg = 0;
   free_start = ts2blk( disk.dsk[0x21d], disk.dsk[0x21e]);
-  k = 5;
+  k = disk.track0l;
   while (k < nb_sectors) {
     if (tabsec[k] != -1) {
       k++;
@@ -574,6 +634,8 @@ int browse_dsk() {
       if (current_sector[0] != 0 || current_sector[1] != 0) {
         current_sector[0] = 0;
         current_sector[1] = 0;
+		disk.dsk[0x21f] = blk2trk( k);
+		disk.dsk[0x220] = blk2sec( k);
         reorg++;
       }
       break;
@@ -593,7 +655,7 @@ int browse_dsk() {
 
 // Recovery of deleted entries space in directory
 // Since the linked list of free sectors was modified
-// They can be restored any more, so we compact the directory
+// They can't be restored any more, so we compact the directory
   k = ndel;
   for (i = 1; i <= nfile; i++) {
     while ((file[nfile].flags &= 1) != 0) {
