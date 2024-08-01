@@ -27,11 +27,7 @@
 #include <time.h>
 #include <ctype.h>
 
-<<<<<<< HEAD
 #define VERSION "1.2 (2024-08-01)"
-=======
-#define VERSION "1.1 (2024-07-24)"
->>>>>>> bce7ef1d3f8f23b0f1756bf809b2bde89cde791d
 
 void usage( char *cmd) {
 	printf( "Usage : %s [options...] <filename>\n", cmd);
@@ -189,11 +185,7 @@ int main(int argc, char *argv[])
 	while (i < 12)
 		volname[i++] = 0;
 
-<<<<<<< HEAD
 	// Is Volume number OK ?	
-=======
-// Is Volume number OK ?	
->>>>>>> bce7ef1d3f8f23b0f1756bf809b2bde89cde791d
 	if (dsknum  < 0 || dsknum > 0xFFFF) {
 		printf( "Disk Volume number (%d) must be positive and less than 65536\n", dsknum);
 		usage( *argv);
@@ -244,18 +236,10 @@ int main(int argc, char *argv[])
 				ft = nbsec/2 + 2;
 			else
 				ft = nbsec;
-<<<<<<< HEAD
 		}
 		if (ft < 6 || ft > nbsec) {
 			printf( "Track 0 size must > 6 and less than number of sectors (%d)\n", nbsec);
 			usage( *argv);
-=======
-		} else {
-			if (ft < 6 || ft > nbsec) {
-				printf( "Track 0 size must > 6 and less than number of sectors (%n)\n", nbsec);
-				usage( *argv);
-                        }
->>>>>>> bce7ef1d3f8f23b0f1756bf809b2bde89cde791d
 		}
 	}
 
