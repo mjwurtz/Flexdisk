@@ -27,12 +27,13 @@
 #include <time.h>
 #include <ctype.h>
 
-#define VERSION "1.1 (2024-06-30)"
+#define VERSION "1.2 (2024-08-01)"
 
 void usage( char *cmd) {
 	printf( "Usage : %s [options...] <filename>\n", cmd);
 	printf( "Options :\n");
 	printf( "  -h --help : this help\n");
+	printf( "  -b --boot=<boot sector image> \n");
 	printf( "  -l --label=<volume label> (default = filename)\n");
 	printf( "  -v --volume-number=<0-65535> (default = 0)\n");
 	printf( "  -t --track-count=<number of tracks> (default 40, max 256)\n");
@@ -51,6 +52,7 @@ void usage( char *cmd) {
 
 int main(int argc, char *argv[])
 {
+	char bootname[256];
 	char filename[256];
 	char geometry[10];
 	char volname[12], *ext;
@@ -60,7 +62,10 @@ int main(int argc, char *argv[])
 		nbsec = 10,
 		dd = 0,
 		ft = 0,
-		fd, nbfree; 
+		fd,
+		fb,
+		nbfree;
+
 	int erg = 0; // error in geometry string ?
 
 	// Sector buffer
@@ -73,20 +78,22 @@ int main(int argc, char *argv[])
 	int i, j;
 
 	static struct option fopt[] = {
-		{"help",           no_argument,       0, 'h' },
-		{"label",          required_argument, 0, 'l' },
-		{"volume-number",  required_argument, 0, 'v' },
-		{"track-count",    required_argument, 0, 't' },
-		{"sector-count",   required_argument, 0, 's' },
-		{"first-track",    required_argument, 0, 'f' },
-		{"double-density", no_argument,       0, 'd' },
-		{"geometry",       required_argument, 0, 'g' },
-		{0,                0,                 0, 0 }
+		{"help",			no_argument,		0, 'h' },
+		{"boot",			required_argument,	0, 'b' },
+		{"label",			required_argument,	0, 'l' },
+		{"volume-number",	required_argument,	0, 'v' },
+		{"track-count",		required_argument,	0, 't' },
+		{"sector-count",	required_argument,	0, 's' },
+		{"first-track",		required_argument,	0, 'f' },
+		{"double-density",	no_argument,		0, 'd' },
+		{"geometry",		required_argument,	0, 'g' },
+		{0,					0,					0, 0 }
 	} ;
 	int opt, val;
 	int opt_index = 0;
 
 	*volname = 0;
+	*bootname = 0;
 	*geometry = 0;
 
 	printf( "Fflex version %s\n", VERSION);
@@ -99,6 +106,13 @@ int main(int argc, char *argv[])
 				volname[11]=0;
 			}
 			break;
+
+		case 'b':
+			if (optarg) {
+				strncpy( bootname, optarg, sizeof(bootname));
+			}
+			break;
+
 		case 'v':
 		    sscanf( optarg, "%d", &dsknum);
 		    break;
@@ -156,7 +170,7 @@ int main(int argc, char *argv[])
 
 	for (i = 0; volname[i]; i++) {
 		if (!isalnum(volname[i]) && volname[i] != '-' && volname[i] != '_') {
-			printf( "Illegal character '%c' in Volume name, replaced by '_'\n", volname[i]);
+			printf( "Illegal character '%c' in Volume name, will be replaced by '_'\n", volname[i]);
 			volname[i] = '_';
 		}
 	}
@@ -171,12 +185,13 @@ int main(int argc, char *argv[])
 	while (i < 12)
 		volname[i++] = 0;
 
-// Is Volume number OK ?	
-	if (disknum  < 0 || dsknum > 0xFFFF) {
+	// Is Volume number OK ?	
+	if (dsknum  < 0 || dsknum > 0xFFFF) {
 		printf( "Disk Volume number (%d) must be positive and less than 65536\n", dsknum);
 		usage( *argv);
 	}
 
+	// Compute and test geometry
 	if (*geometry) {
 		if ((geometry[1] & 0x5F) != 'S' || (geometry[3] & 0x5F) != 'D'
 			|| geometry[5] != '0')
@@ -207,6 +222,7 @@ int main(int argc, char *argv[])
 			usage( *argv);
 		}
 	} else {
+		// track number valid: 0-255, sector number valid: 1-255
 		if (nbsec > 255 || nbsec < 6 + 2 * dd) {
 			printf( "Number of sectors : 6 to 255 (8 to 255 for double-density disks)\n");
 			usage( *argv);
@@ -220,10 +236,10 @@ int main(int argc, char *argv[])
 				ft = nbsec/2 + 2;
 			else
 				ft = nbsec;
-		} else {
-			if (ft < 6 || ft > nbsec) {
-				printf( "Track 0 size must > 6 and less than number of sectors (%n)\n", nbsec);
-				usage( *argv);
+		}
+		if (ft < 6 || ft > nbsec) {
+			printf( "Track 0 size must > 6 and less than number of sectors (%d)\n", nbsec);
+			usage( *argv);
 		}
 	}
 
@@ -248,13 +264,44 @@ int main(int argc, char *argv[])
 		printf( "single-density\n");
 
 	// Now the real part... 
-	// First track is special - 2 empty boot sector first
+	// First track is special :
+	// - start by 1 or 2 boot sectors first
+
 	for (i = 0; i < 256; i++)
 		bloc[i] = 0;
-	write( fd, bloc, 256);
-	write( fd, bloc, 256);
 
-	// Write System Information Record
+	if (*bootname) {
+		printf("include boot file %s\n",bootname);
+
+		if ((fb = open( bootname, O_RDONLY )) < 0) {
+			perror( "Operation aborted");
+			exit( EXIT_FAILURE);
+		}
+
+		// If boot code is less than 256, just leave nulls at the end 
+		read ( fb, bloc, 256);
+		write( fd, bloc, 256);
+
+		for (i = 0; i < 256; i++)
+			bloc[i] = 0;
+
+		// Return 0 if boot image is less than 256 bytes...
+		read ( fb, bloc, 256);
+		write( fd, bloc, 256);
+
+		for (i = 0; i < 256; i++) // reinitialise sector
+			bloc[i] = 0;
+
+		close( fb);
+
+	} else {
+
+		write( fd, bloc, 256);
+		write( fd, bloc, 256);
+	}
+
+	// Write System Information Record (sector #3)
+	//
 	for (i = 0; i < 11; i++)
 		bloc[i+0x10] = volname[i];			// Volume name
 	bloc[0x1B] = (dsknum >> 8) & 0xFF;		// Volume number
@@ -275,31 +322,32 @@ int main(int argc, char *argv[])
 	bloc[0x27] = nbsec;						// End sector
 	write( fd, bloc, 256);
 
-	// write reserved bloc
-	for( i = 0x10; i < 0x28; i++)
+	// write reserved bloc (sector #4), no usage known...
+	for( i = 0x10; i < 0x28; i++)	// clean it, 
 		bloc[i] = 0;
 	write( fd, bloc, 256);
 
-	// write directory (empty) on first track
+	// write directory (empty) on first track (sector #5 and following)
+	// Just chain sectors until the end of track
 	for (i = 5; i < ft; i++) {
 		bloc[1] = i + 1;
 		write( fd, bloc, 256);
 	}
-	// last bloc 
+	// last sector, end of chaining
 	bloc[1] = 0;
 	write( fd, bloc, 256);
 
-	// write rest of disk as a free chain from 01/01 to nbtrk/nbsec
+	// write rest of disk as a free chain from 01/01 to nbtrk-1/nbsec
 	for (i = 1; i < nbtrk; i++) {
 		for (j = 1; j < nbsec; j++) {
 			bloc[0] = i;
 			bloc[1] = j + 1;
 			write( fd, bloc, 256);
 		}
-		if (i < nbtrk-1) {
+		if (i < nbtrk-1) { // last sector of a track
 			bloc[0] = i + 1;
 			bloc[1] = 1;
-		} else {
+		} else { // last sector of the disk
 			bloc[0] = 0;
 			bloc[1] = 0;
 		}

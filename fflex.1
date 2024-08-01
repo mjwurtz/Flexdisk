@@ -21,6 +21,11 @@ Output help on usage and options
 .BI \-l " name\fR, \fP" \-\-label\fR=\fP name
 Flex Volume label, limited to the 11 first characters \fIname\fP. When not precised, the disk label is a copy of the 11 first characters of the \fIfilename\fP, without extension.
 .TP
+.BI \-b " file\fR, \fP" \-\-boot\fR=\fP file
+File name of the Flex boot code to add (256 or 512 bytes,
+will be truncated or completed with nulls without warning).
+By default, the two first sectors are empty
+.TP
 .BI \-v " number\fR, \fP" \-\-volume-number\fR=\fP number
 Flex Volume Number, between 0 and 65535.
 .TP
