@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 
 	printf( "Fflex version %s\n", VERSION);
 
-	while ((opt = getopt_long(argc, argv, "hl:v:t:s:f:dg:", fopt, &opt_index)) != -1) {
+	while ((opt = getopt_long(argc, argv, "hl:b:v:t:s:f:dg:", fopt, &opt_index)) != -1) {
 		switch (opt) {
 		case 'l':
 			if (optarg) {
