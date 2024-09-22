@@ -26,7 +26,7 @@ int main ( int argc, char *argv[]) {
 
 	FILE *input, *output;
 	int chin;			// readed char
-	int tabstop;		// tab stop value
+	int tabstop = 8;	// tab stop value
 	int line_length;	// current line length
 	int nspace;			// number of spaces
 	int opt;			// opt value
@@ -68,13 +68,13 @@ int main ( int argc, char *argv[]) {
 
 	line_length = 0;
 	nspace = 0;
-	tabstop = 4;
 	while ((chin = fgetc( input)) != EOF) {
 		if (chin == ' ') {
 			nspace++;
 			line_length++;
 		} else if (chin == '\t') {	// TAB => prepare for multiple spaces
 			nspace += tabstop - (line_length % tabstop);
+			line_length += tabstop - (line_length % tabstop);
 		} else if (chin == '\n') {
 			nspace = 0;				// throw away trailing spaces
 			line_length = 0;		// Line length reinit
