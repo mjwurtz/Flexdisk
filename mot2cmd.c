@@ -27,7 +27,7 @@
 #define NULL 0
 #endif
 
-char *errmsg[] = {  "Premature end of input file", 
+char *errmsg[] = {  "Empty input file", 
                     "Not a Motorola S19 file",
                     "Unexpected char or EOF",
                     "Checksum error",
@@ -49,7 +49,7 @@ int GetHex(FILE *f, int nChars) {
   int out = 0;
 
   while ( nChars--) {
-    int c = fgetc(f);
+    int c = getc(f);
     if (c == EOF)
       return -1;
     if (c >= 'a')
@@ -95,15 +95,14 @@ int gets19( FILE *fi, FILE *fo) {
       buffer[i]=0;
 
   while (1) {
-    c = fgetc(fi) ;
+    c = getc(fi) ;
     if ((c == '\r') || (c == '\n'))
       continue ;                         // skip newline
     if (c == EOF) {
-      if (nBytes == 0)                   // Empty file...
+      if (index == 0)                    // Empty file...
         return 1;
       else {
-        if (index)
-            nBytes += printbuf( fo, buffer, index);
+        nBytes += printbuf( fo, buffer, index);
         for (i=0; i<252-(nBytes%252); i++)
           fputc( 0, fo);
         return 0;
@@ -113,7 +112,7 @@ int gets19( FILE *fi, FILE *fo) {
     if (c != 'S')                        // Starting with 'S' ?
       return 2;                          // No :-(
   
-    nLineType = fgetc( fi);
+    nLineType = getc( fi);
     if ((count = GetHex(fi,2)) < 3)      // Always between 3 and 255
       return 3;
     if ((nAddr = GetHex(fi,4)) < 0)      // Address between 0 and 0xFFFF
