@@ -242,7 +242,8 @@ int main( int argc, char *argv[]) {
   // Output file name
   if (optind < argc) {
     pname = argv[optind];
-    if ((output = fopen( pname, "w")) == NULL) {
+	// Flag b added for DOS/Window systems
+    if ((output = fopen( pname, "wb")) == NULL) {
       perror( pname);
       usage( *argv);
       exit(2);
@@ -257,8 +258,9 @@ int main( int argc, char *argv[]) {
     outname[i++] = 'C';
     outname[i++] = 'M';
     outname[i++] = 'D';
-    outname[i++] = 0;
-    if ((output = fopen( outname, "w")) == NULL) {
+    outname[i++] = 0; 
+	// Flag b added for DOS/Window systems
+    if ((output = fopen( outname, "wb")) == NULL) {
       perror( outname);
       usage( *argv);
       exit(2);

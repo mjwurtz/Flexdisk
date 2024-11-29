@@ -56,8 +56,8 @@ void download( int index, char *dir) {
 	strcat( path, filename);
   } else
 	strcat( path, file[index].name);
-
-  if ((out = fopen( path, "w")) == NULL)
+// Flag b added for DOS/Window systems
+  if ((out = fopen( path, "wb")) == NULL)
 	perror( path);
   cftrk = file[index].start_trk;
   cfsec = file[index].start_sec;

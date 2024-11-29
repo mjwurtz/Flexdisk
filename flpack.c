@@ -58,7 +58,8 @@ int main ( int argc, char *argv[]) {
 		} else
 			input = stdin;
 		if (optind < argc) {
-			if ((output = fopen( argv[optind], "w")) == NULL) {
+			// Flag b added for DOS/Window systems
+			if ((output = fopen( argv[optind], "wb")) == NULL) {
 				perror( argv[optind]);
 				fprintf( stderr, "Usage: flpack [-t value] [input [output]]\n");
 				exit( 1);
