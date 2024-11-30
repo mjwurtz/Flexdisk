@@ -29,5 +29,5 @@ man: flan.1 fldump.1 fflex.1 flpack.1 flunpack.1 flwrite.1 mot2cmd.1
 	cp flan.1 fldump.1 fflex.1 flpack.1 flunpack.1 flwrite.1 mot2cmd.1 $(MAN)
 
 clean:
-	rm -f flan fldump fflex flpack flunpack flwrite
+	rm -f flan fldump fflex flpack flunpack flwrite mot2cmd
 
