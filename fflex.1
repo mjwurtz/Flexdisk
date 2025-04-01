@@ -27,12 +27,12 @@ will be truncated or completed with nulls without warning).
 By default, the two first sectors are empty
 .TP
 .BI \-v " number\fR, \fP" \-\-volume-number\fR=\fP number
-Flex Volume Number, between 0 and 65535.
+Flex Volume Number, between 0 and 65535 (default 0).
 .TP
 .BI \-t " nbtracks\fR, \fP"  \-\-track-count\fR=\fP nbtracks
-where nbtracks is the total number of tracks (default 40, max 255).
+where nbtracks is the total number of tracks (default 40, max 256).
 .TP
-.BI \-v " nbsectors\fR, \fP"  \-\-sector-count\fR=\fP nbsectors
+.BI \-s " nbsectors\fR, \fP"  \-\-sector-count\fR=\fP nbsectors
 where nbsectors is the total number of sectors by track (default 10, max 255).
 .TP
 .BR \-d ", " \-\-double-density

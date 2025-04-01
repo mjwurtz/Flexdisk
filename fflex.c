@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	char geometry[10];
 	char volname[12], *ext;
 	// Some defaul values...
-	int dsknum = 1,
+	int dsknum = 0,
 		nbtrk = 40,
 		nbsec = 10,
 		dd = 0,
