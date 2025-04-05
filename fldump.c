@@ -25,7 +25,7 @@ static int where = 0;
 
 void usage( char *cmd) {
 	fprintf( stderr, "Usage: %s [-h] => this help\n", cmd);
-	fprintf( stderr, "       %s [-q|-v] [-a] <file>\n", cmd);
+	fprintf( stderr, "       %s [-q|-v] [-b] [-a] <file>\n", cmd);
     fprintf( stderr, "Options:\n");
 	fprintf( stderr, "   -a => extract deleted files if possible\n");
 	fprintf( stderr, "   -b => directory for extracted files based on file name\n");
@@ -581,15 +581,16 @@ int main( int argc, char **argv)
 
   disk.readonly = 1;
   disk.fd = open( disk.filename, O_RDONLY);
-  flags = PROT_READ;
   disk.size = dsk_stat.st_size;
-  disk.dsk = mmap( &disk.dsk, dsk_stat.st_size, flags, MAP_PRIVATE, disk.fd, 0);
-  close( disk.fd);
-
-  if (disk.dsk == NULL) {
-	perror( filename);
+  if ((disk.dsk = malloc( disk.size)) == NULL) {
+	perror( "Malloc failed: ");
 	exit( 3);
   }
+  if (read( disk.fd, disk.dsk, disk.size) < 0) {
+    perror( filename);
+	exit( 3);
+  }
+  close( disk.fd);
 
   return browse_dsk();
 }
