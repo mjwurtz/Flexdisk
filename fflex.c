@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 		strncpy( filename, argv[optind++], 250);
 		filename[250] = 0;
 		if (optind < argc) {
-			printf( "Warning : too many filenames, last ones ignored:");
+			printf( "Warning : only one filename, last one(s) ignored:");
 			while( optind < argc)
 				printf( " %s", argv[optind++]);
 			putchar('\n');
