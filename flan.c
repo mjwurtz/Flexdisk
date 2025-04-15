@@ -738,7 +738,7 @@ int main( int argc, char **argv)
   if (optind < argc) {
     filename = argv[ optind++];
     if (optind < argc) {
-      fprintf( stderr, "Only one filname is allowed\n");
+      fprintf( stderr, "Only one filename is allowed\n");
       usage( *argv);
       exit (3);
     }
