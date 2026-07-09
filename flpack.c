@@ -51,7 +51,7 @@ int main ( int argc, char *argv[]) {
 		if (optind < argc) {
 			if ((input = fopen( argv[optind], "r")) == NULL) {
 				perror( argv[optind]);
-				fprintf( stderr, "Usage: flpack [-t value] [input [output]]\n");
+				fprintf( stderr, "Usage: flpack [-t tabstop] [input [output]]\n");
 				exit( 1);
 			}
 			optind++;
