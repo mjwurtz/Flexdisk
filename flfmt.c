@@ -1,4 +1,4 @@
-/* fflex.c -- Flex floppy formating 
+/* flfmt.c -- Flex floppy formating 
    Copyright (C) 2022 Michel Wurtz - mjwurtz@gmail.com
 
    This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,7 @@ void usage( char *cmd) {
 	printf( "  -s --sector-count=<number of sectors> (default 10, max 255)\n");
 	printf( "  -d --double-density  (default single density)\n");
 	printf( "  -f --first-track=<number of sectors in first track if double-density>\n");
-	printf( "     (same number for single side and (number/2 + 2) for double side)\n");
+	printf( "     (default to (<number of tracks>/2 + 2), ignored if single density)\n");
 	printf( "  -g --geometry=[SS|DS][SD|DD][40|80] (standard flex formats for 5\" floppy)\n");
 	printf( "     example : DSSD80 for a double side single density 80 track floppy\n");
 	printf( "     if this option is used, options -t, -s, -f and -d are ignored\n");
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 	*bootname = 0;
 	*geometry = 0;
 
-	printf( "Fflex version %s\n", VERSION);
+	printf( "Flfmt version %s\n", VERSION);
 
 	while ((opt = getopt_long(argc, argv, "hl:b:v:t:s:f:dg:", fopt, &opt_index)) != -1) {
 		switch (opt) {
@@ -231,12 +231,12 @@ int main(int argc, char *argv[])
 			printf( "Number of tracks : 2 to 256\n");
 			usage( *argv);
 		}
-		if (ft == 0) {
-			if (dd)
+		if (dd) {
+			if (ft == 0)
 				ft = nbsec/2 + 2;
-			else
-				ft = nbsec;
-		}
+		} else
+			ft = nbsec;
+
 		if (ft < 6 || ft > nbsec) {
 			printf( "Track 0 size must > 6 and less than number of sectors (%d)\n", nbsec);
 			usage( *argv);

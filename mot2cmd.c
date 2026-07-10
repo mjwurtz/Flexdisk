@@ -35,6 +35,7 @@ char *errmsg[] = {  "Empty input file",
                     "Address overflow"
                  };
 int verbose = 0;
+int line = 1;
 
 // Help message
 
@@ -96,8 +97,10 @@ int gets19( FILE *fi, FILE *fo) {
 
   while (1) {
     c = getc(fi) ;
-    if ((c == '\r') || (c == '\n'))
+    if ((c == '\r') || (c == '\n')) {
+	  line++;
       continue ;                         // skip newline
+	}
     if (c == EOF) {
       if (index == 0)                    // Empty file...
         return 1;
@@ -273,7 +276,7 @@ int main( int argc, char *argv[]) {
   status = gets19( input, output);
 
   if (status)
-    fprintf( stderr, "Error: %s\n", errmsg[status-1]);
+    fprintf( stderr, "Error: %s, line %d\n", errmsg[status-1], line);
 
   if (input)
     fclose(input);

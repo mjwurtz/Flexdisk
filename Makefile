@@ -2,32 +2,39 @@
 
 MAN = /usr/local/man/man1
 BIN = ~/bin
+CC  = gcc
+LDFLAGS =
 
-all: flan fldump fflex flpack flunpack flwrite mot2cmd
+all: flan fldump flfmt flpack flunpack flwrite mot2cmd
 
-flan: flan.c dsk.h
-	cc -o flan flan.c
-fldump: fldump.c dsk.h
-	cc -o fldump fldump.c
-fflex: fflex.c
-	cc -o fflex fflex.c
-flpack: flpack.c dsk.h
-	cc -o flpack flpack.c
-flunpack: flunpack.c dsk.h
-	cc -o flunpack flunpack.c
-flwrite: flwrite.c dsk.h
-	cc -o flwrite flwrite.c
+.c.o:
+	$(CC) -c $@ $<
+
+flfmt: flfmt.c
+	$(CC) -o flfmt flfmt.c
+flan: flan.o tstflex.o dskflex.h
+	$(CC) $(LDFLAGS) -o flan flan.o tstflex.o
+fldump: fldump.o tstflex.o dskflex.h
+	$(CC) -o fldump fldump.o tstflex.o
+flread: flread.o tstflex.o dskflex.h
+	$(CC) $(LDFLAGS) -o flread flread.o tstflex.o
+flwrite: flwrite.o tstflex.o dskflex.h
+	$(CC) $(LDFLAGS) -o flwrite flwrite.o tstflex.o
+flpack: flpack.c
+	$(CC) -o flpack flpack.c
+flunpack: flunpack.c
+	$(CC) -o flunpack flunpack.c
 mot2cmd: mot2cmd.c
-	cc -o mot2cmd mot2cmd.c
+	$(CC) -o mot2cmd mot2cmd.c
 
 install: all
 	mkdir -p $(BIN)
-	cp flan fldump fflex flpack flunpack flwrite mot2cmd $(BIN)
+	cp flan fldump flfmt flpack flunpack flwrite mot2cmd $(BIN)
 	ln -f $(BIN)/flwrite $(BIN)/fldel
 
-man: flan.1 fldump.1 fflex.1 flpack.1 flunpack.1 flwrite.1 mot2cmd.1
-	cp flan.1 fldump.1 fflex.1 flpack.1 flunpack.1 flwrite.1 mot2cmd.1 $(MAN)
+man: flan.1 fldump.1 flfmt.1 flpack.1 flunpack.1 flwrite.1 mot2cmd.1
+	cp flan.1 fldump.1 flfmt.1 flpack.1 flunpack.1 flwrite.1 mot2cmd.1 $(MAN)
 
 clean:
-	rm -f flan fldump fflex flpack flunpack flwrite mot2cmd
+	rm -f flan fldump flfmt flpack flunpack flwrite mot2cmd
 
