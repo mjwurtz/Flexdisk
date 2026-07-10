@@ -6,13 +6,13 @@ flwrite \- Copy files to a flex disk image
 [\fI\-h\fP]
 .br
 .B flwrite
-[\fI\-d\fP] [\fI\-f\fP] [\fI\-v\fP] file [file]... disk-image-name
+[\fI\-d\fP] [\fI\-f\fP] [\fI\-v\fP] [\fI\-o\fP] file [file]... disk-image-name
 .PP
 .B fldel
 [\fI\-f\fP] [\fI\-v\fP] file [file]... disk-image-name
 .SH DESCRIPTION
 .PP
-Flwrite copy or delete files to an existing flex disk image.
+Flwrite copy or delete files on an existing flex disk image.
 .PP
 Fldel is a shortcut for
 .B flwrite
@@ -20,6 +20,8 @@ Fldel is a shortcut for
 .PP
 Both commands return 0 if all files can be copied or deleted, 1 if some files were not treated,
 and 2 if nothing can be done.
+.PP
+The original file is saved under the same name, postfixed by ".bak".  If this backup file exists, it must be deleted before using \fIflwrite\fR.
 .PP
 If a unusual geometry is found,
 .B flwrite
@@ -38,7 +40,8 @@ One must run
 .I \-r
 to correct this before running the command again.
 .PP
-Files are copied with no conversion except when they start with '#RAND##FLEX#'.
+Files are copied with no conversion except when they start with the
+string '#RAND##FLEX#'.
 In this case, the file is reconstructed and flagged as a random access file.
 .SH OPTIONS
 .TP
@@ -48,6 +51,11 @@ Delete named file(s) from the disk image, don't copy anything.
 .B \-f
 Force: don't quit if disk image geometry is unusual.
 .TP
+.B \-o
+Overwrite: if a file of the same name exists on the flex image, it is replaced.
+The default behaviour is to print a warning message while ignoring files
+already present.
+.TP
 .B \-h
 Help: print a short usage summary and exit.
 .TP
@@ -55,11 +63,11 @@ Help: print a short usage summary and exit.
 Verbose: give some hints about what's done and the files added or deleted.
 .SH COPYRIGHT
 .PP
-\fBFlwrite\fR is Copyright \(co 2022 Michel J. Wurtz.
+\fBFlwrite\fR is Copyright \(co 2022-2026 Michel J. Wurtz.
 .br
 \fBFlwrite\fR is open source software, released under the terms of the GNU General
 Public License as published by the Free Software Foundation; either version 2,
 or any later version.
 .SH SEE ALSO
 .PP
-fflex(1), flan(1), fldump(1), flunpack(1), flpack(1).
+flfmt(1), flan(1), flread(1), fldump(1), flunpack(1), flpack(1).

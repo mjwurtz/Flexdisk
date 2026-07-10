@@ -28,8 +28,12 @@ This option can only be used if the option \fI-v\fP is not used.
 Reconstruct: Repar or reorder the free sectors chained list if necessary.
 No action is taken when errors on files or directory are detected.
 On the other hand, if the problems detected on the freelist are repaired, the command returns 0.
-.PP
+.sp
 Since after using this option, one can usually no more undelete files, deleted entries are replaced by the last files, whose entries are zero filled, increasing directory free entries...
+.sp
+The content of the original file is saved with the extension
+.I .bak
+added to the original file name.
 .TP
 .B \-v
 Verbose: List the files with their length, their first and last track/sector allocation,
@@ -47,4 +51,4 @@ Public License as published by the Free Software Foundation; either version 2,
 or any later version.
 .SH SEE ALSO
 .PP
-fflex(1), fldump(1), flwrite(1), fldel(1), flunpack(1), flpack(1).
+flfmt(1), fldump(1), flread(1), flwrite(1), fldel(1), flunpack(1), flpack(1).
