@@ -1,0 +1,56 @@
+.TH FLREAD 1 "" "" "Flex disk image read"
+.SH NAME
+flread \- Extract files from a Flex disk image file
+\fB
+.SH SYNOPSIS
+.B flread
+[\fI\-h\fP]
+.br
+.B flread
+[\fI\-c\fP] [\fI\-o\fP] [\fI\-v\fP]  files... \fIfilename\fP
+.SH DESCRIPTION
+.PP
+Flread reads the files from a Flex disk image in the current directory. The specified filenames are converted to uppercase to comply with Flex's naming convention.
+.PP
+The names of the files imported will also be in uppercase, regardless of the names specified in the command line. However if a canversion is asked, the file's names are in lowercase to differentiate them.
+.PP
+The modification date of the extracted files are set to the flex date, except when inconsistant.
+.PP
+.B Flread
+returns 0 if everything is OK, 1 if the only problems encountered are in the free sector list
+(sector duplicated or absent, size of list not matching the chained list), or 2 if more
+serious problems that prevent files to be extracted.
+.PP
+If the disk image is not readable, nothing is done and the program returns 3.
+.PP
+Files are extracted and stripped of the 4 first bytes (link to next sector and sector number)
+with no other modification except for random access files, where the 12 first bytes of the
+resulting file are replaced by the text '#RAND##FLEX#', used as magic number.
+.PP
+If the \fi-c\fR option is specified, files are modified to take in account the space's compression sheme used by Flex and the end of line depending on the target system.
+.PP
+Text files can then be converted to unix format by
+.BR flunpack (1).
+.SH OPTIONS
+.TP
+.B \-h
+Help: print a short usage summary and exit.
+.TP
+.B \-c
+Convert: must be used with Flex compressed text files to convert them to a text readable on the current Operating system (Dos/Windows, MacOS, Linux)
+.TP
+.B \-o
+Overwrite: Extract files even if they exist in the current directory... Use with caution.
+.TP
+.B \-v
+Verbose: List the files and print details about the disk image in case of problems detected.
+.SH COPYRIGHT
+.PP
+\fBFlread\fR is Copyright \(co 2022-2026 Michel J. Wurtz.
+.br
+\fBFlread\fR is open source software, released under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2,
+or any later version.
+.SH SEE ALSO
+.PP
+flfmt(1), flan(1), fldump(1), flwrite(1), fldel(1), flunpack(1), flpack(1).
