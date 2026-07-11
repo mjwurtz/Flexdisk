@@ -121,7 +121,7 @@ int extract_file( char *name, int replace, int convert) {
 		} else {
 		  state = 0;       // number of space to print
 		  while (c-- > 0)
-			putchar( ' ');
+			fputc( ' ', out);
 		}
 	  } else
 		fputc( current[j++], out);
