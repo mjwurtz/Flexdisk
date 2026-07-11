@@ -102,7 +102,7 @@ int extract_file( char *name, int replace, int convert) {
 	  if (convert) {
 		c = current[j++];
 		if (state == 0) {
-		  if (c == 0x33)           // ESC char ?
+		  if (c == '\t')           // TAB char ?
 			state = -1;
 		  else if (c != 0) {       // ignore NULL
 								   // end of line vs OS...
