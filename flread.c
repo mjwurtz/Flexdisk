@@ -223,11 +223,6 @@ int main( int argc, char **argv)
   else
 	disk.shortname++;
 
-  if ((dsk_stat.st_mode & S_IWUSR) == 0) {
-    fprintf( stderr, "ERROR: %s is not writable!\n", disk.shortname);
-	exit( 2);
-  }
-
   if ((disk.fd = open( filepath, O_RDONLY)) < 0 ) {
 	perror( filepath);
 	exit( 2);

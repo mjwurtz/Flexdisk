@@ -223,6 +223,7 @@ int main( int argc, char **argv)
   int retval;    // value returned if problem detected
                  // 0: everything is ok ; 1: freelist uncomplete or damaged
                  // 2: disk structure not reparable ; 3: unable to process 
+  int retval2;   // for displaying in "any case"
 // Read parameters
   while ((opt = getopt( argc, argv, "hvqr")) != -1) {
     switch (opt) {
@@ -324,14 +325,16 @@ int main( int argc, char **argv)
   if ((badFlex( 0) & 0xFF) > 1)
     exit( 2);
 
-  retval = analyse(!quiet);
-  if (!repar && retval > 1)
-    return retval;
+  retval = analyse( !quiet);
 
-  retval = browse_dsk(retval);
+  retval2 = browse_dsk(retval);
 
-  if (!repar)
-    return retval;
+  if (!repar) {
+    if (retval > retval2)
+	  return retval;
+	else
+	  return retval2;
+  }
 
   if (retval = repar_dsk( repar)) {
     printf( "%sUnable to restore consistency, aborting.%s\n", s_err, s_norm);

@@ -117,7 +117,7 @@ int badFlex( int strict) {
     printf( "Flex Volume number: %d\n", disk.volnum);
     printf( "Creation Date (YYYY-MM-DD): %d-%02d-%02d\n",
             disk.dsk[0x225]>75?disk.dsk[0x225]+1900:disk.dsk[0x225]+2000,
-            (disk.dsk[0x223]&0x0f)+1, disk.dsk[0x224]);
+            (disk.dsk[0x223]&0x0f), disk.dsk[0x224]);
     printf( "Highest Sector address on disk: %02X/%02X\n",
             disk.dsk[0x226], disk.dsk[0x227]);
   }
@@ -434,15 +434,15 @@ int analyse( int strict) {
         retval = 2;
 		break;
       } else { 
-        file[k].flags |= 0x80;
-		if (k+1 == tabsec[ibloc]) {
+		if (k+1 == tabsec[ibloc])
 		  printf( "%sERROR: File %s (%d), sector [0x%02X/0x%02X] duplicated%s\n",
         	s_err, file[k].name, k+1, blk2trk(ibloc), blk2sec( ibloc), s_norm);
-		} else {
+		else
 		  printf( "%sERROR: File %s (%d), sector [0x%02X/0x%02X] also in file %s (%d)%s\n",
         	s_err, file[k].name, k+1, blk2trk(ibloc), blk2sec( ibloc),
 		    file[tabsec[ibloc]].name, tabsec[ibloc], s_norm);
-		}
+        file[k].flags |= 0x80;
+		break;
       }
 	  obloc = ibloc;
       ibloc = nxtsec[ibloc];
@@ -640,7 +640,7 @@ int list_files( int details) {
         if (file[k].flags & 0x80)
           printf( " %sCORRUPTED%s", s_err, s_norm);
         if (file[k].flags & 0x40)
-          printf( " %sUNUSABLE%s", s_warn, s_norm);
+          printf( " %sTRUNCATED ?%s", s_warn, s_norm);
         if (file[k].flags & 0x20)
           printf( " (maybe recoverable)");
         putchar( '\n');
