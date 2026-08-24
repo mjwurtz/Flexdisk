@@ -434,9 +434,15 @@ int analyse( int strict) {
         retval = 2;
 		break;
       } else { 
-        printf( "%sERROR: File %s (%d), sector [0x%02X/0x%02X] also in file %s (%d)%s\n",
-          s_err, file[k].name, k+1, blk2trk(ibloc), blk2sec( ibloc), file[tabsec[ibloc]].name, tabsec[ibloc], s_norm);
         file[k].flags |= 0x80;
+		if (k+1 == tabsec[ibloc]) {
+		  printf( "%sERROR: File %s (%d), sector [0x%02X/0x%02X] duplicated%s\n",
+        	s_err, file[k].name, k+1, blk2trk(ibloc), blk2sec( ibloc), s_norm);
+		} else {
+		  printf( "%sERROR: File %s (%d), sector [0x%02X/0x%02X] also in file %s (%d)%s\n",
+        	s_err, file[k].name, k+1, blk2trk(ibloc), blk2sec( ibloc),
+		    file[tabsec[ibloc]].name, tabsec[ibloc], s_norm);
+		}
       }
 	  obloc = ibloc;
       ibloc = nxtsec[ibloc];

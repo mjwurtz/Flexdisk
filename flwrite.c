@@ -388,14 +388,13 @@ int main( int argc, char **argv)
   infile[i] = NULL;
 
 // If possible, colorize Warnings and Errors
+  s_err = s_warn = s_norm = "";
   if (isatty( 1) && (term = getenv( "TERM")) != NULL) {
     if (strstr( term, "256color") != NULL) {
 	  s_ok = "\e[1;92m";
       s_warn = "\e[1;93m";
       s_err  = "\e[1;91m";
       s_norm = "\e[0m";
-    } else {
-      s_err = s_warn = s_norm = "";
     }
   }
 
