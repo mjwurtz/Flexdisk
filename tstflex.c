@@ -253,6 +253,7 @@ int analyse( int strict) {
       if (strict)
         fprintf( stderr, "ERROR: Bad freelist, bloc %d duplicated\n", ibloc);
       retval = 1;
+	  break;
     }
     if (tabsec[ibloc] == -99998 && strict) {
       printf( "%sWarning: freelist contains track 0 bloc %d%s\n",
